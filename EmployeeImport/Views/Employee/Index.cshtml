@@ -1,0 +1,179 @@
+﻿    @model List<EmployeeImport.Models.Employee>
+
+    @{
+        ViewData["Title"] = "Employee Import";
+    }
+
+    <div>
+
+        <h2 class="mb-4">Employee Import</h2>
+
+        <!-- Upload Form -->
+        <form asp-action="Import" asp-controller="Employee" enctype="multipart/form-data" method="post" class="mb-4">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-6">
+                    <input type="file" name="file" class="form-control" required accept=".csv" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Feedback Messages -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger mt-3" style="white-space: pre-wrap;">
+                @Html.Raw(TempData["Error"])
+            </div>
+        }
+
+
+        <!-- DataTable -->
+        <div class="table-responsive">
+            <table id="employeeTable" class="table table-bordered table-hover align-middle mt-4">
+                <thead class="table-light">
+                    <tr>
+                        <th>Personnel #</th>
+                        <th>Name</th>
+                        <th>Surname</th>
+                        <th>Date of Birth</th>
+                        <th>Phone</th>
+                        <th>Mobile</th>
+                        <th>Address</th>
+                        <th>Address 2</th>
+                        <th>Zip Code</th>
+                        <th>Email</th>
+                        <th>Date Hired</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var emp in Model)
+                    {
+                        <tr>
+                            <td>@emp.PersonnelNumber</td>
+                            <td>@emp.Name</td>
+                            <td>@emp.Surname</td>
+                            <td>@emp.DateOfBirth?.ToShortDateString()</td>
+                            <td>@emp.PhoneNumber</td>
+                            <td>@emp.Mobile</td>
+                            <td>@emp.Address</td>
+                            <td>@emp.Address2</td>
+                            <td>@emp.ZipCode</td>
+                            <td>@emp.Email</td>
+                            <td>@emp.DateHired?.ToShortDateString()</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning edit-btn text-white"
+                                        data-bs-toggle="modal" data-bs-target="#editModal"
+                                        data-id="@emp.Id"
+                                        data-personnel="@emp.PersonnelNumber"
+                                        data-name="@emp.Name"
+                                        data-surname="@emp.Surname"
+                                        data-dob="@emp.DateOfBirth?.ToString("yyyy-MM-dd")"
+                                        data-phone="@emp.PhoneNumber"
+                                        data-mobile="@emp.Mobile"
+                                        data-address="@emp.Address"
+                                        data-address2="@emp.Address2"
+                                        data-zip="@emp.ZipCode"
+                                        data-email="@emp.Email"
+                                        data-hiredate="@emp.DateHired?.ToString("yyyy-MM-dd")">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <form method="post" asp-action="Update">
+                @Html.AntiForgeryToken()
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Employee</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body row g-3">
+                        <input type="hidden" id="edit-id" name="Id" />
+                        <div class="col-md-6"><label class="form-label">Personnel #</label><input class="form-control" id="edit-personnel" name="PersonnelNumber" /></div>
+                        <div class="col-md-6"><label class="form-label">Name</label><input class="form-control" id="edit-name" name="Name" /></div>
+                        <div class="col-md-6"><label class="form-label">Surname</label><input class="form-control" id="edit-surname" name="Surname" /></div>
+                        <div class="col-md-6"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="edit-dob" name="DateOfBirth" /></div>
+                        <div class="col-md-6"><label class="form-label">Phone</label><input class="form-control" id="edit-phone" name="PhoneNumber" /></div>
+                        <div class="col-md-6"><label class="form-label">Mobile</label><input class="form-control" id="edit-mobile" name="Mobile" /></div>
+                        <div class="col-md-6"><label class="form-label">Address</label><input class="form-control" id="edit-address" name="Address" /></div>
+                        <div class="col-md-6"><label class="form-label">Address 2</label><input class="form-control" id="edit-address2" name="Address2" /></div>
+                        <div class="col-md-6"><label class="form-label">Zip Code</label><input class="form-control" id="edit-zip" name="ZipCode" /></div>
+                        <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" id="edit-email" name="Email" /></div>
+                        <div class="col-md-6"><label class="form-label">Date Hired</label><input type="date" class="form-control" id="edit-hiredate" name="DateHired" /></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @section Scripts {
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#employeeTable').DataTable({
+                    order: [[2, 'asc']],
+                    dom: "<'row mb-3'<'col-sm-6'l><'col-sm-6 text-end'f>>" +
+                         "<'row'<'col-sm-12'tr>>" +
+                         "<'row mt-3'<'col-sm-6'i><'col-sm-6 text-end'p>>"
+                });
+
+                $('.edit-btn').on('click', function ()  {
+                    const btn = $(this);
+                    $('#edit-id').val(btn.data('id'));
+                    $('#edit-personnel').val(btn.data('personnel'));
+                    $('#edit-name').val(btn.data('name'));
+                    $('#edit-surname').val(btn.data('surname'));
+                    $('#edit-dob').val(btn.data('dob'));
+                    $('#edit-phone').val(btn.data('phone'));
+                    $('#edit-mobile').val(btn.data('mobile'));
+                    $('#edit-address').val(btn.data('address'));
+                    $('#edit-address2').val(btn.data('address2'));
+                    $('#edit-zip').val(btn.data('zip'));
+                    $('#edit-email').val(btn.data('email'));
+                    $('#edit-hiredate').val(btn.data('hiredate'));
+                });
+            });
+        </script>
+    <style>
+        #employeeTable th, #employeeTable td {
+            white-space: nowrap;
+            padding: 0.75rem 2rem;
+        }
+
+        #employeeTable {
+            width: 100% !important;
+            table-layout: auto !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 1rem;
+        }
+
+        .dataTables_paginate .paginate_button {
+            margin: 0 3px;
+        }
+    </style>
+    }
